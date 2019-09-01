@@ -1,0 +1,8 @@
+flask
+passlib
+sqlalchemy
+flask-restful
+flask-migrate
+flask-sqlalchemy
+python-dotenv
+flask-jwt-extended[asymmetric_crypto]

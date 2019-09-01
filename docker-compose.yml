@@ -1,0 +1,60 @@
+version: '3'
+networks:
+  net-redis:
+  net-openresty:
+services:
+  redis:
+    image: "redis:alpine"
+    networks:
+      - net-redis
+  apiregistry:
+    image: "redis:alpine"
+    volumes:
+      - ./api_registry/api_registry.sh:/etc/api_registry.sh
+    depends_on:
+      - redis
+    networks:
+      - net-redis
+    environment:
+        REDIS_HOST: redis
+        PROVIDERS_SERVICE_HOST: providersservice:5000
+        CUSTOMERS_SERVICE_HOST: customersservice:5000
+        USERS_SERVICE_HOST: usersservice:5000
+    command: ["/etc/api_registry.sh"]
+
+  apigateway:
+    build: ./api_gateway/
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - net-redis
+      - net-openresty
+    depends_on:
+      - redis
+    volumes:
+      - ./api_gateway/conf:/usr/local/openresty/nginx/conf/
+      - ./api_gateway/logs:/var/log/nginx
+      - ./api_gateway/lua:/usr/local/openresty/nginx/lua
+    environment:
+        REDIS_HOST: redis
+
+  providersservice:
+    build: ./provider/
+    restart: unless-stopped
+    networks:
+      - net-openresty
+    
+
+  customersservice:
+    build: ./customer/
+    restart: unless-stopped
+    networks:
+      - net-openresty
+    
+  usersservice:
+    build: ./user/
+    restart: unless-stopped
+    networks:
+      - net-openresty
+    
